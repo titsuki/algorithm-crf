@@ -4,15 +4,62 @@ require_ok 'Algorithm::CRF';
 require_ok 'Algorithm::CRF::Doc';
 
 my @docs;
-push @docs, Algorithm::CRF::Doc->new(observed_sequence => ['Apple','juice'],
-				     labeled_sequence => ['drink','drink']);
+my $RS = '0x30';
+push @docs, Algorithm::CRF::Doc->new(observed_sequence => ['A','B','C','D'],
+				     labeled_sequence => ['drink','drink','cake','cake']);
 
-push @docs, Algorithm::CRF::Doc->new(observed_sequence => ['Apple','drink'],
-				     labeled_sequence => ['drink','drink']);
+my @feature_functions;
+push @feature_functions, sub {
+    my ($observed_sequence,$current_label,$prev_label) = @_;
+    $observed_sequence = join('0x30',@{ $observed_sequence });
+    return 0 if($observed_sequence ne join('0x30',qw/A B C D/));
+    return 1 if($current_label eq 'drink' && $prev_label eq 'drink');
+    return 0;
+};
 
-push @docs, Algorithm::CRF::Doc->new(observed_sequence => ['Apple','Inc'],
-				     labeled_sequence => ['company','company']);
-my $crf = Algorithm::CRF->new(docs => \@docs);
+push @feature_functions, sub {
+    my ($observed_sequence,$current_label,$prev_label) = @_;
+    $observed_sequence = join('0x30',@{ $observed_sequence });
+    return 0 if($observed_sequence ne join('0x30',qw/A B C D/));
+    return 1 if($current_label eq 'drink' && $prev_label eq 'cake');
+    return 0;
+};
+
+push @feature_functions, sub {
+    my ($observed_sequence,$current_label,$prev_label) = @_;
+    $observed_sequence = join('0x30',@{ $observed_sequence });
+    return 0 if($observed_sequence ne join('0x30',qw/A B C D/));
+    return 1 if($current_label eq 'cake' && $prev_label eq 'cake');
+    return 0;
+};
+
+push @feature_functions, sub {
+    my ($observed_sequence,$current_label,$prev_label) = @_;
+    $observed_sequence = join('0x30',@{ $observed_sequence });
+    return 0 if($observed_sequence ne join('0x30',qw/A B C D/));
+    return 1 if($current_label eq 'cake' && $prev_label eq 'drink');
+    return 0;
+};
+
+push @feature_functions, sub {
+    my ($observed_sequence,$current_label,$prev_label) = @_;
+    $observed_sequence = join('0x30',@{ $observed_sequence });
+    return 0 if($observed_sequence ne join('0x30',qw/A B C D/));
+    return 1 if($current_label eq '0x30' && $prev_label eq 'cake');
+    return 0;
+};
+
+push @feature_functions, sub {
+    my ($observed_sequence,$current_label,$prev_label) = @_;
+    $observed_sequence = join('0x30',@{ $observed_sequence });
+    return 0 if($observed_sequence ne join('0x30',qw/A B C D/));
+    return 1 if($current_label eq 'cake' && $prev_label eq '0x30');
+    return 0;
+};
+
+my $crf = Algorithm::CRF->new(docs => \@docs,feature_functions => \@feature_functions);
+
+
 $crf->train();
 
 done_testing;
