@@ -33,16 +33,29 @@ has 'T' => (
     isa => 'Num'
     );
 
+has 'ratio' => (
+    is => 'rw',
+    isa => 'Num',
+    default => 0.1
+    );
+
 sub BUILD {
     my $self = shift;
-    my @weight = map { 0 } @{ $self->{feature_functions} };
-    $self->{weight} = \@weight;
-    $self->{T} = scalar @{ $self->{docs}->[0]->{labeled_sequence} };
+    my @dummy = map { 0 } @{ $self->{feature_functions} };
+    $self->{weight} = [@dummy];
+    $self->{T} = scalar @{ $self->{docs}->[0]->{labeled_sequence} } - 2;
 }
 
 sub train {
     my $self = shift;
-    $self->compute_delta();
+    for(my $i = 0; $i < 1; $i++){
+	my $delta = $self->compute_delta();
+	for(my $j = 0; $j < @{ $delta }; $j++){
+	    $delta->[$j] *= 0.1;
+	}
+	$self->{weight} = $delta;
+	print Dumper($self->{weight});
+    }
 }
 
 sub compute_delta {
@@ -51,7 +64,7 @@ sub compute_delta {
     my $front = [@dummy]; 
 
     foreach my $doc (@{ $self->{docs} }){
-	for(my $t = 0; $t < @{ $doc->{labeled_sequence} }; $t++){
+	for(my $t = 1; $t < @{ $doc->{labeled_sequence} } - 1; $t++){
 	    $front = _add($front,
 			  $self->compute_phi($doc->{observed_sequence},
 					     $doc->{labeled_sequence}->[$t],
@@ -113,15 +126,15 @@ sub compute_beta {
 }
 
 sub compute_psi {
-    my ($self,$observed_sequence,$current_label,$prev_label) = @_;
-    return exp(_dot($self->{weight},$self->compute_phi($observed_sequence,$current_label,$prev_label)));
+    my ($self,$observed_sequence,$current_label,$prev_label,$t) = @_;
+    return exp(_dot($self->{weight},$self->compute_phi($observed_sequence,$current_label,$prev_label,$t)));
 }
 
 sub compute_phi {
-    my ($self,$observed_sequence,$current_label,$prev_label) = @_;
+    my ($self,$observed_sequence,$current_label,$prev_label,$t) = @_;
     my $vector = [];
     foreach my $func (@{ $self->{feature_functions} }){
-	push @{ $vector }, $func->($observed_sequence,$current_label,$prev_label);
+	push @{ $vector }, $func->($observed_sequence,$current_label,$prev_label,$t);
     }
     return $vector;
 }
