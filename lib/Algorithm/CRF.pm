@@ -65,7 +65,8 @@ sub BUILD {
     for(my $i = 1; $i < @{ $self->{docs}->[0]->{labeled_sequence} }; $i++){
 	$self->{_labels}->[$i] = $self->{labels};
     }
-    $self->{_labels}->[scalar @{ $self->{docs}->[0]->{labeled_sequence}}] = [chr(0x1f)];
+    $self->{beta_cache}->{chr(0x1f)}->{scalar @{ $self->{docs}->[0]->{labeled_sequence}} - 1} = 1.0;
+    $self->{_labels}->[scalar @{ $self->{docs}->[0]->{labeled_sequence}} - 1] = [chr(0x1f)];
 }
 
 sub train {
@@ -123,26 +124,27 @@ sub compute_alpha {
 	$self->{alpha_cache}->{$current_label}->{$t} += 
 	    $self->compute_psi($doc,$current_label, $prev_label, $t)
 	    * $self->compute_alpha($doc,$prev_label, $t - 1);
-	print $self->compute_alpha($doc,$prev_label, $t - 1),"\n";
     }
     return $self->{alpha_cache}->{$current_label}->{$t};
 }
 
 sub compute_beta {
     my ($self,$doc,$current_label,$t) = @_;
-    if($t + 1 >= $self->{T} - 1){
-	return 1.0;
+
+    if($t + 1 > @{ $doc->{labeled_sequence} }){
+	return 0;
     }
 
     if(exists($self->{beta_cache}->{$current_label}->{$t})){
 	return $self->{beta_cache}->{$current_label}->{$t};
     }
 
-    foreach my $next_label (@{ $self->{labels} }){
+    foreach my $next_label (@{ $self->{_labels}->[$t + 1] }){
 	$self->{beta_cache}->{$current_label}->{$t} += 
 	    $self->compute_psi($doc,$next_label, $current_label, $t + 1)
 	    * $self->compute_beta($doc,$next_label, $t + 1);
     }
+    return $self->{beta_cache}->{$current_label}->{$t};
 }
 
 sub compute_psi {

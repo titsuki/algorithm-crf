@@ -50,6 +50,22 @@ is($crf->compute_alpha($doc,'cake',4),0.035);
 
 is($crf->compute_alpha($doc,chr(0x1f),5),0.084);
 
+is($crf->compute_beta($doc,chr(0x1f),5),1);
+
+is($crf->compute_beta($doc,'drink',4),1);
+is($crf->compute_beta($doc,'cake',4),1);
+
+is($crf->compute_beta($doc,'drink',3),0.5);
+is($crf->compute_beta($doc,'cake',3),0.2);
+
+is($crf->compute_beta($doc,'drink',2),0.12);
+is($crf->compute_beta($doc,'cake',2),0.12);
+
+is($crf->compute_beta($doc,'drink',1),0.036);
+is($crf->compute_beta($doc,'cake',1),0.048);
+
+is($crf->compute_beta($doc,chr(0x1e),0),0.084);
+
 my @feature_functions;
 push @feature_functions, sub {
     my ($doc,$current_label,$prev_label,$t) = @_;
