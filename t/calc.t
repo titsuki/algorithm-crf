@@ -14,8 +14,6 @@ my $crf = Algorithm::CRF->new(docs => \@docs,feature_functions => \@feature_func
 # c2 = cake
 
 $crf->{psi_cache}->{'drink'}->{chr(0x1e)}->{1} = 1.0;
-$crf->{psi_cache}->{'drink'}->{chr(0x1e)}->{1} = 1.0;
-$crf->{psi_cache}->{'cake'}->{chr(0x1e)}->{1} = 1.0;
 $crf->{psi_cache}->{'cake'}->{chr(0x1e)}->{1} = 1.0;
 
 $crf->{psi_cache}->{'drink'}->{'drink'}->{2} = 0.2;
