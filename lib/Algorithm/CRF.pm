@@ -71,7 +71,7 @@ sub train {
 	for(my $j = 0; $j < @{ $delta }; $j++){
 	    $delta->[$j] *= $self->{learning_rate};
 	}
-	$self->{weight} = $delta;
+	$self->{weight} = _add($self->{weight},$delta);
     }
 }
 
