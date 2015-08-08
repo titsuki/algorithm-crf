@@ -66,6 +66,8 @@ is($crf->compute_beta($doc,'cake',1),0.048);
 
 is($crf->compute_beta($doc,chr(0x1e),0),0.084);
 
+is($crf->compute_Z($doc),0.084);
+
 my @feature_functions;
 push @feature_functions, sub {
     my ($doc,$current_label,$prev_label,$t) = @_;

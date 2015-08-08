@@ -96,7 +96,7 @@ sub compute_delta {
 	    foreach my $doc_y (@{ $self->{docs} }){
 		my $current_label = $doc_y->{labeled_sequence}->[$t];
 		my $prev_label = $doc_y->{labeled_sequence}->[$t - 1];
-		my $co = 1.0 / $self->compute_Z()
+		my $co = 1.0 / $self->compute_Z($doc)
 		    * $self->compute_psi($doc,$current_label,$prev_label,$t)
 		    * $self->compute_alpha($doc,$current_label,$t)
 		    * $self->compute_beta($doc,$current_label,$t);
@@ -166,8 +166,8 @@ sub compute_phi {
 }
 
 sub compute_Z {
-    my $self = shift;
-    return 1;
+    my ($self,$doc) = @_;
+    return $self->{alpha_cache}->{chr(0x1f)}->{scalar @{$doc->{labeled_sequence}} - 1};
 }
 
 sub _dot {
