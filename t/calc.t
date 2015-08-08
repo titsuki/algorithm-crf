@@ -33,7 +33,7 @@ $crf->{psi_cache}->{'cake'}->{'cake'}->{4} = 0.1;
 
 $crf->{psi_cache}->{chr(0x1f)}->{'drink'}->{5} = 1.0;
 $crf->{psi_cache}->{chr(0x1f)}->{'cake'}->{5} = 1.0;
-
+$crf->_compute_cache($doc);
 is($crf->compute_alpha($doc,chr(0x1e),0),1.0);
 
 is($crf->compute_alpha($doc,'drink',1),1);

@@ -53,14 +53,6 @@ sub BUILD {
     my $self = shift;
     my @dummy = map { 0 } @{ $self->{feature_functions} };
     $self->{weight} = [@dummy];
-    $self->{alpha_cache}->{chr(0x1e)}->{0} = 1.0;
-
-    $self->{_labels}->[0] = [chr(0x1e)];
-    for(my $i = 1; $i < @{ $self->{docs}->[0]->{labeled_sequence} }; $i++){
-	$self->{_labels}->[$i] = $self->{labels};
-    }
-    $self->{beta_cache}->{chr(0x1f)}->{scalar @{ $self->{docs}->[0]->{labeled_sequence}} - 1} = 1.0;
-    $self->{_labels}->[scalar @{ $self->{docs}->[0]->{labeled_sequence}} - 1] = [chr(0x1f)];
 }
 
 sub train {
@@ -75,17 +67,39 @@ sub train {
     }
 }
 
+sub _compute_cache {
+    my ($self,$doc) = @_;
+
+    # init each labels
+    $self->{_labels} = [];
+    $self->{_labels}->[0] = [chr(0x1e)];
+    for(my $t = 1; $t < scalar @{ $doc->{labeled_sequence} } - 1; $t++){
+	$self->{_labels}->[$t] = $self->{labels};
+    }
+    $self->{_labels}->[scalar @{ $doc->{labeled_sequence} } - 1] = [chr(0x1f)];
+    
+    # cache alpha/beta
+    $self->{alpha_cache}->{chr(0x1e)}->{0} = 1.0;
+    $self->{beta_cache}->{chr(0x1f)}->{scalar @{ $doc->{labeled_sequence} } - 1} = 1.0;
+
+    for(my $t = 1; $t < @{ $doc->{labeled_sequence} }; $t++){
+	my $current_label = $doc->{labeled_sequence}->[$t];
+	$self->compute_alpha($doc,$current_label,$t);
+    }
+    
+    for(my $t = @{ $doc->{labeled_sequence} } - 2; $t >= 0; $t--){
+	my $current_label = $doc->{labeled_sequence}->[$t];
+	$self->compute_beta($doc,$current_label,$t);
+    }
+}
+
 sub compute_delta {
     my $self = shift;
     my @dummy = map { 0 } @{ $self->{feature_functions} };
     my $front = [@dummy]; 
 
     foreach my $doc (@{ $self->{docs} }){
-	for(my $t = 0; $t < @{ $doc->{labeled_sequence} }; $t++){
-	    my $current_label = $doc->{labeled_sequence}->[$t];
-	    $self->compute_alpha($doc,$current_label,$t);
-	    $self->compute_beta($doc,$current_label,$t);
-	}
+	$self->_compute_cache($doc);
 
 	for(my $t = 1; $t < @{ $doc->{labeled_sequence} }; $t++){
 	    $front = _add($front,
