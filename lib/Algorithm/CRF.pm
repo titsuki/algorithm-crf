@@ -67,7 +67,6 @@ sub train {
 	    $delta->[$j] *= 0.1;
 	}
 	$self->{weight} = $delta;
-	print Dumper($self->{weight});
     }
 }
 
@@ -132,6 +131,10 @@ sub compute_delta {
 sub compute_alpha {
     my ($self,$doc,$current_label,$t) = @_;
 
+    if($t < 0){
+	return 0;
+    }
+
     if(exists($self->{alpha_cache}->{$doc->{id}}->{$current_label}->{$t})){
 	return $self->{alpha_cache}->{$doc->{id}}->{$current_label}->{$t};
     }
@@ -190,7 +193,7 @@ sub compute_marginal_probability {
     my ($self,$doc,$current_label,$prev_label,$t) = @_;
     return 1.0 / $self->compute_Z($doc)
 	* $self->compute_psi($doc,$current_label,$prev_label,$t)
-	* $self->compute_alpha($doc,$current_label,$t)
+	* $self->compute_alpha($doc,$prev_label,$t - 1)
 	* $self->compute_beta($doc,$current_label,$t);
 }
 

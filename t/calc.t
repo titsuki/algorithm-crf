@@ -9,7 +9,7 @@ my $doc = Algorithm::CRF::Doc->new(observed_sequence => ['A','B','C','D'],
 my @docs;
 push @docs,$doc;
 
-my $crf = Algorithm::CRF->new(docs => \@docs,feature_functions => \@feature_functions,labels => ['drink','cake']);
+my $crf = Algorithm::CRF->new(docs => \@docs,labels => ['drink','cake']);
 
 # c1 = drink
 # c2 = cake
@@ -69,6 +69,11 @@ is($crf->compute_beta($doc,chr(0x1e),0),0.084);
 
 is($crf->compute_Z($doc),0.084);
 
+is(sprintf("%.3lf",$crf->compute_marginal_probability($doc,'drink','drink',3)),0.595);
+is(sprintf("%.3lf",$crf->compute_marginal_probability($doc,'drink','cake',3)),0.238);
+is(sprintf("%.3lf",$crf->compute_marginal_probability($doc,'cake','drink',3)),0.119);
+is(sprintf("%.3lf",$crf->compute_marginal_probability($doc,'cake','cake',3)),0.048);
+
 my @feature_functions;
 push @feature_functions, sub {
     my ($doc,$current_label,$prev_label,$t) = @_;
@@ -120,5 +125,6 @@ push @feature_functions, sub {
 
 my $crf = Algorithm::CRF->new(docs => \@docs,feature_functions => \@feature_functions,labels => ['drink','cake']);
 $crf->train();
+
 
 done_testing;
