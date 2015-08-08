@@ -28,7 +28,7 @@ has 'beta_cache' => (
     is => 'rw'
     );
 
-has 'ratio' => (
+has 'learning_rate' => (
     is => 'rw',
     isa => 'Num',
     default => 0.1
@@ -69,7 +69,7 @@ sub train {
     for(my $i = 0; $i < $self->{iter_limit}; $i++){
 	my $delta = $self->compute_delta();
 	for(my $j = 0; $j < @{ $delta }; $j++){
-	    $delta->[$j] *= 0.1;
+	    $delta->[$j] *= $self->{learning_rate};
 	}
 	$self->{weight} = $delta;
     }
