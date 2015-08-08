@@ -8,12 +8,14 @@ has 'lattice' => (
 
 has 'doc' => (
     is => 'rw',
-    isa => 'Algorithm::CRF::Doc'
+    isa => 'Algorithm::CRF::Doc',
+    required => 1
     );
 
 has 'labels' => (
     is => 'rw',
-    isa => 'ArrayRef[Str]'
+    isa => 'ArrayRef[Str]',
+    required => 1
     );
 
 has '_labels' => (
@@ -28,7 +30,8 @@ has 'cache_table' => (
 
 has 'CRF' => (
     is => 'rw',
-    isa => 'Algorithm::CRF'
+    isa => 'Algorithm::CRF',
+    required => 1
     );
 
 sub BUILD {
