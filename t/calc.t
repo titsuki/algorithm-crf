@@ -3,16 +3,14 @@ use Test::More;
 require_ok 'Algorithm::CRF';
 require_ok 'Algorithm::CRF::Doc';
 
-my $doc = Algorithm::CRF::Doc->new(observed_sequence => ['A','B','C','D'],
-				   labeled_sequence => [chr(0x1e),'drink','drink','cake','cake',chr(0x1f)]);
-
-my @docs;
-push @docs,$doc;
-
-my $crf = Algorithm::CRF->new(docs => \@docs,labels => ['drink','cake']);
+my $crf = Algorithm::CRF->new(labels => ['drink','cake']);
 
 # c1 = drink
 # c2 = cake
+
+my $doc = Algorithm::CRF::Doc->new(observed_sequence => ['A','B','C','D'],
+				   labeled_sequence => [chr(0x1e),'drink','drink','cake','cake',chr(0x1f)],
+				   id => 0);
 
 $crf->{psi_cache}->{$doc->{id}}->{'drink'}->{chr(0x1e)}->{1} = 1.0;
 $crf->{psi_cache}->{$doc->{id}}->{'cake'}->{chr(0x1e)}->{1} = 1.0;
@@ -34,6 +32,7 @@ $crf->{psi_cache}->{$doc->{id}}->{'cake'}->{'cake'}->{4} = 0.1;
 
 $crf->{psi_cache}->{$doc->{id}}->{chr(0x1f)}->{'drink'}->{5} = 1.0;
 $crf->{psi_cache}->{$doc->{id}}->{chr(0x1f)}->{'cake'}->{5} = 1.0;
+
 $crf->_compute_cache($doc);
 is($crf->compute_alpha($doc,chr(0x1e),0),1.0);
 
@@ -123,8 +122,10 @@ push @feature_functions, sub {
     return 0;
 };
 
+my @docs;
+push @docs,$doc;
+
 my $crf = Algorithm::CRF->new(docs => \@docs,feature_functions => \@feature_functions,labels => ['drink','cake']);
 $crf->train();
-
 
 done_testing;
