@@ -28,11 +28,6 @@ has 'beta_cache' => (
     is => 'rw'
     );
 
-has 'T' => (
-    is => 'rw',
-    isa => 'Num'
-    );
-
 has 'ratio' => (
     is => 'rw',
     isa => 'Num',
@@ -58,7 +53,6 @@ sub BUILD {
     my $self = shift;
     my @dummy = map { 0 } @{ $self->{feature_functions} };
     $self->{weight} = [@dummy];
-    $self->{T} = scalar @{ $self->{docs}->[0]->{observed_sequence} };
     $self->{alpha_cache}->{chr(0x1e)}->{0} = 1.0;
 
     $self->{_labels}->[0] = [chr(0x1e)];
