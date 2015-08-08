@@ -14,4 +14,9 @@ has 'labeled_sequence' => (
     default => sub{ [] }
     );
 
+has 'id' => (
+    is => 'rw',
+    isa => 'Int'
+    );
+
 1;

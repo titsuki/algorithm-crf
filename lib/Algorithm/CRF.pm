@@ -53,6 +53,10 @@ sub BUILD {
     my $self = shift;
     my @dummy = map { 0 } @{ $self->{feature_functions} };
     $self->{weight} = [@dummy];
+
+    for(my $doc_i = 0; $doc_i < @{ $self->{docs} }; $doc_i++){
+	$self->{docs}->[$doc_i]->{id} = $doc_i;
+    }
 }
 
 sub train {
@@ -79,8 +83,8 @@ sub _compute_cache {
     $self->{_labels}->[scalar @{ $doc->{labeled_sequence} } - 1] = [chr(0x1f)];
     
     # cache alpha/beta
-    $self->{alpha_cache}->{chr(0x1e)}->{0} = 1.0;
-    $self->{beta_cache}->{chr(0x1f)}->{scalar @{ $doc->{labeled_sequence} } - 1} = 1.0;
+    $self->{alpha_cache}->{$doc->{id}}->{chr(0x1e)}->{0} = 1.0;
+    $self->{beta_cache}->{$doc->{id}}->{chr(0x1f)}->{scalar @{ $doc->{labeled_sequence} } - 1} = 1.0;
 
     for(my $t = 1; $t < @{ $doc->{labeled_sequence} }; $t++){
 	my $current_label = $doc->{labeled_sequence}->[$t];
@@ -110,13 +114,10 @@ sub compute_delta {
 	    
 	    foreach my $current_label (@{ $self->{_labels}->[$t] }){
 		foreach my $prev_label (@{ $self->{_labels}->[$t - 1] }){
-		    my $co = 1.0 / $self->compute_Z($doc)
-			* $self->compute_psi($doc,$current_label,$prev_label,$t)
-			* $self->compute_alpha($doc,$current_label,$t)
-			* $self->compute_beta($doc,$current_label,$t);
+		    my $marginal_probability = $self->compute_marginal_probability($doc,$current_label,$prev_label,$t);
 		    my $tmp_vector = $self->compute_phi($doc,$current_label,$prev_label); 
 		    for(my $vector_i = 0; $vector_i < @{ $tmp_vector }; $vector_i++){
-			$tmp_vector->[$vector_i] *= $co;
+			$tmp_vector->[$vector_i] *= $marginal_probability;
 		    }
 		    $rear = _add($rear,$tmp_vector);
 		}
@@ -131,16 +132,16 @@ sub compute_delta {
 sub compute_alpha {
     my ($self,$doc,$current_label,$t) = @_;
 
-    if(exists($self->{alpha_cache}->{$current_label}->{$t})){
-	return $self->{alpha_cache}->{$current_label}->{$t};
+    if(exists($self->{alpha_cache}->{$doc->{id}}->{$current_label}->{$t})){
+	return $self->{alpha_cache}->{$doc->{id}}->{$current_label}->{$t};
     }
 
     foreach my $prev_label (@{ $self->{_labels}->[$t - 1] }){
-	$self->{alpha_cache}->{$current_label}->{$t} += 
+	$self->{alpha_cache}->{$doc->{id}}->{$current_label}->{$t} += 
 	    $self->compute_psi($doc,$current_label, $prev_label, $t)
 	    * $self->compute_alpha($doc,$prev_label, $t - 1);
     }
-    return $self->{alpha_cache}->{$current_label}->{$t};
+    return $self->{alpha_cache}->{$doc->{id}}->{$current_label}->{$t};
 }
 
 sub compute_beta {
@@ -150,24 +151,24 @@ sub compute_beta {
 	return 0;
     }
 
-    if(exists($self->{beta_cache}->{$current_label}->{$t})){
-	return $self->{beta_cache}->{$current_label}->{$t};
+    if(exists($self->{beta_cache}->{$doc->{id}}->{$current_label}->{$t})){
+	return $self->{beta_cache}->{$doc->{id}}->{$current_label}->{$t};
     }
 
     foreach my $next_label (@{ $self->{_labels}->[$t + 1] }){
-	$self->{beta_cache}->{$current_label}->{$t} += 
+	$self->{beta_cache}->{$doc->{id}}->{$current_label}->{$t} += 
 	    $self->compute_psi($doc,$next_label, $current_label, $t + 1)
 	    * $self->compute_beta($doc,$next_label, $t + 1);
     }
-    return $self->{beta_cache}->{$current_label}->{$t};
+    return $self->{beta_cache}->{$doc->{id}}->{$current_label}->{$t};
 }
 
 sub compute_psi {
     my ($self,$doc,$current_label,$prev_label,$t) = @_;
-    if(exists($self->{psi_cache}->{$current_label}->{$prev_label}->{$t})){
-	return $self->{psi_cache}->{$current_label}->{$prev_label}->{$t};
+    if(exists($self->{psi_cache}->{$doc->{id}}->{$current_label}->{$prev_label}->{$t})){
+	return $self->{psi_cache}->{$doc->{id}}->{$current_label}->{$prev_label}->{$t};
     }
-    return ($self->{psi_cache}->{$current_label}->{$prev_label}->{$t}
+    return ($self->{psi_cache}->{$doc->{id}}->{$current_label}->{$prev_label}->{$t}
 	    = exp(_dot($self->{weight},$self->compute_phi($doc,$current_label,$prev_label,$t))));
 }
 
@@ -182,7 +183,15 @@ sub compute_phi {
 
 sub compute_Z {
     my ($self,$doc) = @_;
-    return $self->{alpha_cache}->{chr(0x1f)}->{scalar @{$doc->{labeled_sequence}} - 1};
+    return $self->{alpha_cache}->{$doc->{id}}->{chr(0x1f)}->{scalar @{$doc->{labeled_sequence}} - 1};
+}
+
+sub compute_marginal_probability {
+    my ($self,$doc,$current_label,$prev_label,$t) = @_;
+    return 1.0 / $self->compute_Z($doc)
+	* $self->compute_psi($doc,$current_label,$prev_label,$t)
+	* $self->compute_alpha($doc,$current_label,$t)
+	* $self->compute_beta($doc,$current_label,$t);
 }
 
 sub _dot {

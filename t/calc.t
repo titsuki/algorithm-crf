@@ -5,6 +5,7 @@ require_ok 'Algorithm::CRF::Doc';
 
 my $doc = Algorithm::CRF::Doc->new(observed_sequence => ['A','B','C','D'],
 				   labeled_sequence => [chr(0x1e),'drink','drink','cake','cake',chr(0x1f)]);
+
 my @docs;
 push @docs,$doc;
 
@@ -13,26 +14,26 @@ my $crf = Algorithm::CRF->new(docs => \@docs,feature_functions => \@feature_func
 # c1 = drink
 # c2 = cake
 
-$crf->{psi_cache}->{'drink'}->{chr(0x1e)}->{1} = 1.0;
-$crf->{psi_cache}->{'cake'}->{chr(0x1e)}->{1} = 1.0;
+$crf->{psi_cache}->{$doc->{id}}->{'drink'}->{chr(0x1e)}->{1} = 1.0;
+$crf->{psi_cache}->{$doc->{id}}->{'cake'}->{chr(0x1e)}->{1} = 1.0;
 
-$crf->{psi_cache}->{'drink'}->{'drink'}->{2} = 0.2;
-$crf->{psi_cache}->{'drink'}->{'cake'}->{2} = 0.3;
-$crf->{psi_cache}->{'cake'}->{'drink'}->{2} = 0.1;
-$crf->{psi_cache}->{'cake'}->{'cake'}->{2} = 0.1;
+$crf->{psi_cache}->{$doc->{id}}->{'drink'}->{'drink'}->{2} = 0.2;
+$crf->{psi_cache}->{$doc->{id}}->{'drink'}->{'cake'}->{2} = 0.3;
+$crf->{psi_cache}->{$doc->{id}}->{'cake'}->{'drink'}->{2} = 0.1;
+$crf->{psi_cache}->{$doc->{id}}->{'cake'}->{'cake'}->{2} = 0.1;
 
-$crf->{psi_cache}->{'drink'}->{'drink'}->{3} = 0.2;
-$crf->{psi_cache}->{'drink'}->{'cake'}->{3} = 0.2;
-$crf->{psi_cache}->{'cake'}->{'drink'}->{3} = 0.1;
-$crf->{psi_cache}->{'cake'}->{'cake'}->{3} = 0.1;
+$crf->{psi_cache}->{$doc->{id}}->{'drink'}->{'drink'}->{3} = 0.2;
+$crf->{psi_cache}->{$doc->{id}}->{'drink'}->{'cake'}->{3} = 0.2;
+$crf->{psi_cache}->{$doc->{id}}->{'cake'}->{'drink'}->{3} = 0.1;
+$crf->{psi_cache}->{$doc->{id}}->{'cake'}->{'cake'}->{3} = 0.1;
 
-$crf->{psi_cache}->{'drink'}->{'drink'}->{4} = 0.3;
-$crf->{psi_cache}->{'drink'}->{'cake'}->{4} = 0.1;
-$crf->{psi_cache}->{'cake'}->{'drink'}->{4} = 0.2;
-$crf->{psi_cache}->{'cake'}->{'cake'}->{4} = 0.1;
+$crf->{psi_cache}->{$doc->{id}}->{'drink'}->{'drink'}->{4} = 0.3;
+$crf->{psi_cache}->{$doc->{id}}->{'drink'}->{'cake'}->{4} = 0.1;
+$crf->{psi_cache}->{$doc->{id}}->{'cake'}->{'drink'}->{4} = 0.2;
+$crf->{psi_cache}->{$doc->{id}}->{'cake'}->{'cake'}->{4} = 0.1;
 
-$crf->{psi_cache}->{chr(0x1f)}->{'drink'}->{5} = 1.0;
-$crf->{psi_cache}->{chr(0x1f)}->{'cake'}->{5} = 1.0;
+$crf->{psi_cache}->{$doc->{id}}->{chr(0x1f)}->{'drink'}->{5} = 1.0;
+$crf->{psi_cache}->{$doc->{id}}->{chr(0x1f)}->{'cake'}->{5} = 1.0;
 $crf->_compute_cache($doc);
 is($crf->compute_alpha($doc,chr(0x1e),0),1.0);
 
