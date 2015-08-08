@@ -54,6 +54,12 @@ has 'iter_limit' => (
     default => 1
     );
 
+has 'C' => (
+    is => 'ro',
+    isa => 'Num',
+    default => 1
+    );
+
 sub BUILD {
     my $self = shift;
     my @dummy = map { 0 } @{ $self->{feature_functions} };
@@ -68,9 +74,7 @@ sub train {
     my $self = shift;
     for(my $i = 0; $i < $self->{iter_limit}; $i++){
 	my $delta = $self->compute_delta();
-	for(my $j = 0; $j < @{ $delta }; $j++){
-	    $delta->[$j] *= $self->{learning_rate};
-	}
+	$delta = _multiply($self->{learning_rate},$delta);
 	$self->{weight} = _add($self->{weight},$delta);
     }
 }
@@ -119,17 +123,14 @@ sub compute_delta {
 	    foreach my $current_label (@{ $self->{_labels}->[$t] }){
 		foreach my $prev_label (@{ $self->{_labels}->[$t - 1] }){
 		    my $marginal_probability = $self->compute_marginal_probability($doc,$current_label,$prev_label,$t);
-		    my $tmp_vector = $self->compute_phi($doc,$current_label,$prev_label); 
-		    for(my $vector_i = 0; $vector_i < @{ $tmp_vector }; $vector_i++){
-			$tmp_vector->[$vector_i] *= $marginal_probability;
-		    }
-		    $rear = _add($rear,$tmp_vector);
+		    $rear = _add($rear,_multiply($marginal_probability,$self->compute_phi($doc,$current_label,$prev_label)));
 		}
 	    }
-
+	    
 	    $front = _sub($front,$rear);
 	}
     }
+    $front = _sub($front,_multiply($self->{C},$self->{weight}));
     return $front;
 }
 
@@ -227,6 +228,16 @@ sub _sub {
 	push @{ $merged }, $vector1->[$i] - $vector2->[$i];
     }
     return $merged;
+}
+
+sub _multiply {
+    my ($scalar, $vector) = @_;
+    my $merged = [];
+    for(my $i = 0; $i < @{ $vector }; $i++){
+	push @{ $merged }, $scalar * $vector->[$i]
+    }
+    return $merged;
+
 }
 
 1;

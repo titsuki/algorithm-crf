@@ -1,4 +1,5 @@
 use Test::More;
+use Data::Dumper;
 
 require_ok 'Algorithm::CRF';
 require_ok 'Algorithm::CRF::Doc';
@@ -122,10 +123,17 @@ push @feature_functions, sub {
     return 0;
 };
 
-my @docs;
-push @docs,$doc;
+my $doc1 = Algorithm::CRF::Doc->new(observed_sequence => ['A','B','C','D'],
+				    labeled_sequence => [chr(0x1e),'drink','drink','cake','cake',chr(0x1f)]);
+my $doc2 = Algorithm::CRF::Doc->new(observed_sequence => ['X','B','X','D'],
+				    labeled_sequence => [chr(0x1e),'drink','drink','cake','cake',chr(0x1f)]);
 
-my $crf = Algorithm::CRF->new(docs => \@docs,feature_functions => \@feature_functions,labels => ['drink','cake']);
+my @docs;
+push @docs,$doc1;
+push @docs,$doc2;
+
+my $crf = Algorithm::CRF->new(docs => \@docs,feature_functions => \@feature_functions,labels => ['drink','cake'],iter_limit => 1000);
 $crf->train();
+print STDERR Dumper($crf->{weight});
 
 done_testing;
