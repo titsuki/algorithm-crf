@@ -3,6 +3,7 @@ use Data::Dumper;
 
 require_ok 'Algorithm::CRF';
 require_ok 'Algorithm::CRF::Doc';
+require_ok 'Algorithm::Viterbi';
 
 my $crf = Algorithm::CRF->new(labels => ['drink','cake']);
 
@@ -135,5 +136,9 @@ push @docs,$doc2;
 my $crf = Algorithm::CRF->new(docs => \@docs,feature_functions => \@feature_functions,labels => ['drink','cake'],iter_limit => 1000);
 $crf->train();
 print STDERR Dumper($crf->{weight});
+
+my $doc = Algorithm::CRF::Doc->new(observed_sequence => ['A','B','X','D']);
+my $viterbi = Algorithm::Viterbi->new(doc => $doc, CRF => $crf, labels => ['drink','cake']);
+$viterbi->construct_lattice();
 
 done_testing;
