@@ -87,24 +87,31 @@ sub compute_delta {
     my $front = [@dummy]; 
 
     foreach my $doc (@{ $self->{docs} }){
+	for(my $t = 0; $t < @{ $doc->{labeled_sequence} }; $t++){
+	    my $current_label = $doc->{labeled_sequence}->[$t];
+	    $self->compute_alpha($doc,$current_label,$t);
+	    $self->compute_beta($doc,$current_label,$t);
+	}
+
 	for(my $t = 1; $t < @{ $doc->{labeled_sequence} }; $t++){
 	    $front = _add($front,
-			  $self->compute_phi($doc->{observed_sequence},
+			  $self->compute_phi($doc,
 					     $doc->{labeled_sequence}->[$t],
 					     $doc->{labeled_sequence}->[$t - 1]));
 	    my $rear = [@dummy]; 
-	    foreach my $doc_y (@{ $self->{docs} }){
-		my $current_label = $doc_y->{labeled_sequence}->[$t];
-		my $prev_label = $doc_y->{labeled_sequence}->[$t - 1];
-		my $co = 1.0 / $self->compute_Z($doc)
-		    * $self->compute_psi($doc,$current_label,$prev_label,$t)
-		    * $self->compute_alpha($doc,$current_label,$t)
-		    * $self->compute_beta($doc,$current_label,$t);
-		my $tmp_vector = $self->compute_phi($doc->{observed_sequence},$current_label,$prev_label); 
-		for(my $vector_i = 0; $vector_i < @{ $tmp_vector }; $vector_i++){
-		    $tmp_vector->[$vector_i] *= $co;
+	    
+	    foreach my $current_label (@{ $self->{_labels}->[$t] }){
+		foreach my $prev_label (@{ $self->{_labels}->[$t - 1] }){
+		    my $co = 1.0 / $self->compute_Z($doc)
+			* $self->compute_psi($doc,$current_label,$prev_label,$t)
+			* $self->compute_alpha($doc,$current_label,$t)
+			* $self->compute_beta($doc,$current_label,$t);
+		    my $tmp_vector = $self->compute_phi($doc,$current_label,$prev_label); 
+		    for(my $vector_i = 0; $vector_i < @{ $tmp_vector }; $vector_i++){
+			$tmp_vector->[$vector_i] *= $co;
+		    }
+		    $rear = _add($rear,$tmp_vector);
 		}
-		$rear = _add($rear,$tmp_vector);
 	    }
 
 	    $front = _sub($front,$rear);
@@ -148,19 +155,19 @@ sub compute_beta {
 }
 
 sub compute_psi {
-    my ($self,$observed_sequence,$current_label,$prev_label,$t) = @_;
+    my ($self,$doc,$current_label,$prev_label,$t) = @_;
     if(exists($self->{psi_cache}->{$current_label}->{$prev_label}->{$t})){
 	return $self->{psi_cache}->{$current_label}->{$prev_label}->{$t};
     }
     return ($self->{psi_cache}->{$current_label}->{$prev_label}->{$t}
-	    = exp(_dot($self->{weight},$self->compute_phi($observed_sequence,$current_label,$prev_label,$t))));
+	    = exp(_dot($self->{weight},$self->compute_phi($doc,$current_label,$prev_label,$t))));
 }
 
 sub compute_phi {
-    my ($self,$observed_sequence,$current_label,$prev_label,$t) = @_;
+    my ($self,$doc,$current_label,$prev_label,$t) = @_;
     my $vector = [];
     foreach my $func (@{ $self->{feature_functions} }){
-	push @{ $vector }, $func->($observed_sequence,$current_label,$prev_label,$t);
+	push @{ $vector }, $func->($doc,$current_label,$prev_label,$t);
     }
     return $vector;
 }

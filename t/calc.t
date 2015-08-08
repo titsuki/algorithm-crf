@@ -105,7 +105,7 @@ push @feature_functions, sub {
     my ($doc,$current_label,$prev_label,$t) = @_;
     my $observed_sequence = join(chr(0x1d),@{ $doc->{observed_sequence} });
     return 0 if($observed_sequence ne join(chr(0x1d),qw/A B C D/));
-    return 1 if($current_label eq chr(0x1d) && $prev_label eq 'cake');
+    return 1 if($current_label eq chr(0x1f) && $prev_label eq 'cake');
     return 0;
 };
 
@@ -113,8 +113,11 @@ push @feature_functions, sub {
     my ($doc,$current_label,$prev_label,$t) = @_;
     my $observed_sequence = join(chr(0x1d),@{ $doc->{observed_sequence} });
     return 0 if($observed_sequence ne join(chr(0x1d),qw/A B C D/));
-    return 1 if($current_label eq 'cake' && $prev_label eq chr(0x1d));
+    return 1 if($current_label eq 'cake' && $prev_label eq chr(0x1e));
     return 0;
 };
+
+my $crf = Algorithm::CRF->new(docs => \@docs,feature_functions => \@feature_functions,labels => ['drink','cake']);
+$crf->train();
 
 done_testing;
