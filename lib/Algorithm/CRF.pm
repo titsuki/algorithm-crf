@@ -48,6 +48,11 @@ has 'labels' => (
     isa => 'ArrayRef[Str]'
     );
 
+has 'iter_limit' => (
+    is => 'rw',
+    isa => 'Int',
+    default => 1
+    );
 
 sub BUILD {
     my $self = shift;
@@ -61,7 +66,7 @@ sub BUILD {
 
 sub train {
     my $self = shift;
-    for(my $i = 0; $i < 1; $i++){
+    for(my $i = 0; $i < $self->{iter_limit}; $i++){
 	my $delta = $self->compute_delta();
 	for(my $j = 0; $j < @{ $delta }; $j++){
 	    $delta->[$j] *= 0.1;
