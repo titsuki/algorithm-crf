@@ -117,13 +117,13 @@ sub compute_delta {
 	    $front = _add($front,
 			  $self->compute_phi($doc,
 					     $doc->{labeled_sequence}->[$t],
-					     $doc->{labeled_sequence}->[$t - 1]));
+					     $doc->{labeled_sequence}->[$t - 1],$t));
 	    my $rear = [@dummy]; 
 	    
 	    foreach my $current_label (@{ $self->{_labels}->[$t] }){
 		foreach my $prev_label (@{ $self->{_labels}->[$t - 1] }){
 		    my $marginal_probability = $self->compute_marginal_probability($doc,$current_label,$prev_label,$t);
-		    $rear = _add($rear,_multiply($marginal_probability,$self->compute_phi($doc,$current_label,$prev_label)));
+		    $rear = _add($rear,_multiply($marginal_probability,$self->compute_phi($doc,$current_label,$prev_label,$t)));
 		}
 	    }
 	    

@@ -124,6 +124,14 @@ push @feature_functions, sub {
     return 0;
 };
 
+push @feature_functions, sub {
+    my ($doc,$current_label,$prev_label,$t) = @_;
+    my $observed_sequence = join(chr(0x1d),@{ $doc->{observed_sequence} });
+    return 0 if($observed_sequence ne join(chr(0x1d),qw/A B C D/));
+    return 1 if($current_label eq 'drink' && $prev_label eq chr(0x1e));
+    return 0;
+};
+
 my $doc1 = Algorithm::CRF::Doc->new(observed_sequence => ['A','B','C','D'],
 				    labeled_sequence => [chr(0x1e),'drink','drink','cake','cake',chr(0x1f)]);
 my $doc2 = Algorithm::CRF::Doc->new(observed_sequence => ['X','B','X','D'],
@@ -137,8 +145,9 @@ my $crf = Algorithm::CRF->new(docs => \@docs,feature_functions => \@feature_func
 $crf->train();
 print STDERR Dumper($crf->{weight});
 
-my $doc = Algorithm::CRF::Doc->new(observed_sequence => ['A','B','X','D']);
+my $doc = Algorithm::CRF::Doc->new(observed_sequence => ['A','B','C','D']);
 my $viterbi = Algorithm::Viterbi->new(doc => $doc, CRF => $crf, labels => ['drink','cake']);
-$viterbi->construct_lattice();
+my $result = $viterbi->compute_best_path();
+print STDERR Dumper($result);
 
 done_testing;
