@@ -146,7 +146,7 @@ $crf->train();
 print STDERR Dumper($crf->{weight});
 
 my $doc = Algorithm::CRF::Doc->new(observed_sequence => ['A','B','C','D']);
-my $viterbi = Algorithm::Viterbi->new(doc => $doc, CRF => $crf, labels => ['drink','cake']);
+my $viterbi = Algorithm::Viterbi->new(doc => $doc, CRF => $crf);
 my $result = $viterbi->compute_best_path();
 print STDERR Dumper($result);
 
