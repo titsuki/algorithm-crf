@@ -14,12 +14,6 @@ has 'doc' => (
     required => 1
     );
 
-has 'labels' => (
-    is => 'rw',
-    isa => 'ArrayRef[Str]',
-    required => 1
-    );
-
 has '_labels' => (
     is => 'rw',
     isa => 'ArrayRef[ArrayRef[Str]]'
